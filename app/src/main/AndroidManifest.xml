@@ -27,6 +27,9 @@
         <!-- Auth choice (Login/Register screen) -->
         <activity android:name=".AuthChoiceActivity" />
 
+        <!-- Main home screen -->
+        <activity android:name=".HomeActivity" />
+
         <!-- Login screen -->
         <activity android:name=".LoginActivity" />
 
