@@ -1,42 +1,110 @@
 package com.example.languagebuddy
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Patterns
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import com.example.languagebuddy.ui.theme.LanguageBuddyTheme
 
-class RegisterActivity : AppCompatActivity() {
+class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+        setContent {
+            LanguageBuddyTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    RegisterScreen(
+                        onSubmit = { _, _, _ ->
+                            // Replace with registration persistence logic
+                            startActivity(Intent(this, AuthChoiceActivity::class.java))
+                            finish()
+                        },
+                        onHaveAccount = {
+                            startActivity(Intent(this, LoginActivity::class.java))
+                            finish()
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
 
-        val first = findViewById<EditText>(R.id.etFirstName)
-        val last  = findViewById<EditText>(R.id.etLastName)
-        val dob   = findViewById<EditText>(R.id.etDob)
-        val email = findViewById<EditText>(R.id.etEmail)
-        val pass  = findViewById<EditText>(R.id.etPassword)
-        val btn   = findViewById<Button>(R.id.btnSubmit)
+@Composable
+private fun RegisterScreen(
+    onSubmit: (name: String, email: String, password: String) -> Unit,
+    onHaveAccount: () -> Unit
+) {
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
 
-        btn.setOnClickListener {
-            val f = first.text.toString().trim()
-            val l = last.text.toString().trim()
-            val d = dob.text.toString().trim()
-            val e = email.text.toString().trim()
-            val p = pass.text.toString()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Create account",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = "Join LanguageBuddy and track your practice progress.",
+            style = MaterialTheme.typography.bodyMedium
+        )
 
-            fun err(m:String){ Toast.makeText(this, m, Toast.LENGTH_SHORT).show() }
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
+        )
 
-            if (f.isEmpty() || l.isEmpty() || d.isEmpty() || e.isEmpty() || p.isEmpty()) { err("All fields are required"); return@setOnClickListener }
-            if (f.length !in 3..30) { err("First name must be 3–30 chars"); return@setOnClickListener }
-            if (l.length !in 2..30) { err("Family name must be 2–30 chars"); return@setOnClickListener }
-            if (!Regex("""\d{4}-\d{2}-\d{2}""").matches(d)) { err("DOB must be YYYY-MM-DD"); return@setOnClickListener }
-            if (!Patterns.EMAIL_ADDRESS.matcher(e).matches()) { err("Invalid email"); return@setOnClickListener }
-            if (p.length < 6) { err("Password must be at least 6 chars"); return@setOnClickListener }
+        Button(
+            onClick = { onSubmit(name, email, password) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = name.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+        ) {
+            Text(text = "Register")
+        }
 
-            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
-            finish() // back to AuthChoice
+        Button(
+            onClick = onHaveAccount,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "I already have an account")
         }
     }
 }
