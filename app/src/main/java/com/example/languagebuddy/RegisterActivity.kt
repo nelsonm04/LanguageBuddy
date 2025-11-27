@@ -33,7 +33,7 @@ class RegisterActivity : ComponentActivity() {
                     RegisterScreen(
                         onSubmit = { _, _, _ ->
                             // Replace with registration persistence logic
-                            startActivity(Intent(this, AuthChoiceActivity::class.java))
+                            startActivity(Intent(this, HomeActivity::class.java))
                             finish()
                         },
                         onHaveAccount = {

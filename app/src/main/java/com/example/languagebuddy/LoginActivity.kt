@@ -33,7 +33,7 @@ class LoginActivity : ComponentActivity() {
                     LoginScreen(
                         onSubmit = { _, _ ->
                             // Replace with authentication logic
-                            startActivity(Intent(this, AuthChoiceActivity::class.java))
+                            startActivity(Intent(this, HomeActivity::class.java))
                             finish()
                         },
                         onCreateAccount = {
