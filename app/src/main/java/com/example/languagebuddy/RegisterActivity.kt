@@ -2,6 +2,8 @@ package com.example.languagebuddy
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -17,12 +19,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.languagebuddy.data.AccountRepository
+import com.example.languagebuddy.data.accountDataStore
 import com.example.languagebuddy.ui.theme.LanguageBuddyTheme
+import kotlinx.coroutines.launch
 
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,8 +39,7 @@ class RegisterActivity : ComponentActivity() {
             LanguageBuddyTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     RegisterScreen(
-                        onSubmit = { _, _, _ ->
-                            // Replace with registration persistence logic
+                        onRegisterSuccess = {
                             startActivity(Intent(this, HomeActivity::class.java))
                             finish()
                         },
@@ -49,12 +56,45 @@ class RegisterActivity : ComponentActivity() {
 
 @Composable
 private fun RegisterScreen(
-    onSubmit: (name: String, email: String, password: String) -> Unit,
+    onRegisterSuccess: () -> Unit,
     onHaveAccount: () -> Unit
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
+    val context = LocalContext.current
+    val repo = remember { AccountRepository(context.accountDataStore) }
+    val scope = rememberCoroutineScope()
+
+    var firstName by rememberSaveable { mutableStateOf("") }
+    var lastName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var error by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun validate(): Boolean {
+        return when {
+            firstName.isBlank() -> {
+                error = "First name is required"
+                false
+            }
+            lastName.isBlank() -> {
+                error = "Last name is required"
+                false
+            }
+            email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                error = "Enter a valid email address"
+                false
+            }
+            password.length < 6 -> {
+                error = "Password must be at least 6 characters"
+                false
+            }
+            confirmPassword != password -> {
+                error = "Passwords must match"
+                false
+            }
+            else -> true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -73,29 +113,73 @@ private fun RegisterScreen(
         )
 
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
+            value = firstName,
+            onValueChange = {
+                firstName = it
+                error = null
+            },
+            label = { Text("First name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = {
+                lastName = it
+                error = null
+            },
+            label = { Text("Last name") },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                error = null
+            },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                error = null
+            },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = {
+                confirmPassword = it
+                error = null
+            },
+            label = { Text("Confirm password") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
+        )
+
+        if (error != null) {
+            Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
+        }
 
         Button(
-            onClick = { onSubmit(name, email, password) },
+            onClick = {
+                if (!validate()) return@Button
+                scope.launch {
+                    val displayName = listOf(firstName.trim(), lastName.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                    val created = repo.registerAccount(displayName, email.trim(), password)
+                    if (!created) {
+                        error = "An account with this email already exists"
+                    } else {
+                        Toast.makeText(context, "Account created", Toast.LENGTH_SHORT).show()
+                        onRegisterSuccess()
+                    }
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
-            enabled = name.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+            enabled = firstName.isNotBlank() && lastName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank()
         ) {
             Text(text = "Register")
         }
