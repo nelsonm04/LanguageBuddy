@@ -13,7 +13,7 @@ class SplashActivity : ComponentActivity() {
         setContent {
             LanguageBuddyTheme {
                 LaunchedEffect(Unit) {
-                    startActivity(Intent(this@SplashActivity, AuthChoiceActivity::class.java))
+                    startActivity(Intent(this@SplashActivity, LoginActivity::class.java))
                     finish()
                 }
             }

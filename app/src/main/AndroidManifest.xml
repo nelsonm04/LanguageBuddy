@@ -24,9 +24,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Auth choice (Login/Register screen) -->
-        <activity android:name=".AuthChoiceActivity" />
-
         <!-- Main home screen -->
         <activity android:name=".HomeActivity" />
 

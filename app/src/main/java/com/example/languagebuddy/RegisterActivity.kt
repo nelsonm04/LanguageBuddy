@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.languagebuddy.data.AccountRepository
 import com.example.languagebuddy.data.accountDataStore
+import com.example.languagebuddy.data.room.LanguageBuddyDatabase
 import com.example.languagebuddy.ui.theme.LanguageBuddyTheme
 import kotlinx.coroutines.launch
 
@@ -60,7 +61,8 @@ private fun RegisterScreen(
     onHaveAccount: () -> Unit
 ) {
     val context = LocalContext.current
-    val repo = remember { AccountRepository(context.accountDataStore) }
+    val database = remember { LanguageBuddyDatabase.getInstance(context) }
+    val repo = remember { AccountRepository(database.accountDao(), context.accountDataStore) }
     val scope = rememberCoroutineScope()
 
     var firstName by rememberSaveable { mutableStateOf("") }
